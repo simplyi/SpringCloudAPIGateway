@@ -21,6 +21,10 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 	@Autowired
 	Environment env;
 	
+	public AuthorizationHeaderFilter() {
+		super(Config.class);
+	}
+	
 	public static class Config {
 		// Put configuration properties here
 	}
