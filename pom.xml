@@ -65,14 +65,6 @@
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-actuator -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-actuator</artifactId>
-		</dependency>
-
-
 	</dependencies>
 
 	<dependencyManagement>
