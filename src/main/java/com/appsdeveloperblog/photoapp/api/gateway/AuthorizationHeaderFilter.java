@@ -67,31 +67,32 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         return response.setComplete();
     }
     
-    private boolean isJwtValid(String jwt) {
-    	boolean returnValue=true;
-    	
-    	String subject = null;
-    	String tokenSecret = env.getProperty("token.secret");
-    	byte[] secretKeyBytes =Base64.getEncoder().encode(tokenSecret.getBytes());
-    	SecretKey signingKey = new SecretKeySpec(secretKeyBytes, SignatureAlgorithm.HS512.getJcaName());
-    	
-    	
-    	JwtParser jwtParser = Jwts.parserBuilder()
-    			.setSigningKey(signingKey)
-    			.build();
-    	
-    	try {
-    		Jwt<Header, Claims> parsedToken = jwtParser.parse(jwt);
-    		subject = parsedToken.getBody().getSubject();
-    	} catch(Exception ex) {
-    		returnValue = false;
-    	}
-    	
-    	if(subject == null || subject.isEmpty()) {
-    		returnValue = false;
-    	}
-    	
-    	return returnValue;
-    }
+	private boolean isJwtValid(String jwt) {
+		boolean returnValue = true;
+
+		String subject = null;
+		String tokenSecret = env.getProperty("token.secret");
+		byte[] secretKeyBytes = Base64.getEncoder().encode(tokenSecret.getBytes());
+		SecretKey signingKey = new SecretKeySpec(secretKeyBytes, SignatureAlgorithm.HS512.getJcaName());
+
+		JwtParser jwtParser = Jwts.parserBuilder()
+				.setSigningKey(signingKey)
+				.build();
+
+		try {
+
+			Jwt<Header, Claims> parsedToken = jwtParser.parse(jwt);
+			subject = parsedToken.getBody().getSubject();
+
+		} catch (Exception ex) {
+			returnValue = false;
+		}
+
+		if (subject == null || subject.isEmpty()) {
+			returnValue = false;
+		}
+
+		return returnValue;
+	}
 
 }
