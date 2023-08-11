@@ -1,6 +1,9 @@
 package com.appsdeveloperblog.photoapp.api.gateway;
 
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,6 +27,7 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import reactor.core.publisher.Mono;
+import java.util.ArrayList;
 
 @Component
 public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<AuthorizationHeaderFilter.Config> {
@@ -52,9 +56,11 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
 			String jwt = authorizationHeader.replace("Bearer", "");
 			
-			if(!isJwtValid(jwt)) {
-				return onError(exchange, "JWT token is not valid", HttpStatus.UNAUTHORIZED);
-			}
+			List<String> authorities = getAuthorities(jwt);
+			
+//			if(!isJwtValid(jwt)) {
+//				return onError(exchange, "JWT token is not valid", HttpStatus.UNAUTHORIZED);
+//			}
 			
 			return chain.filter(exchange);
 		};
@@ -67,10 +73,9 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
         return response.setComplete();
     }
     
-	private boolean isJwtValid(String jwt) {
-		boolean returnValue = true;
+	private List<String> getAuthorities(String jwt) {
+		List<String> returnValue = new ArrayList<>();
 
-		String subject = null;
 		String tokenSecret = env.getProperty("token.secret");
 		byte[] secretKeyBytes = Base64.getEncoder().encode(tokenSecret.getBytes());
 		SecretKey signingKey = new SecretKeySpec(secretKeyBytes, SignatureAlgorithm.HS512.getJcaName());
@@ -82,17 +87,45 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 		try {
 
 			Jwt<Header, Claims> parsedToken = jwtParser.parse(jwt);
-			subject = parsedToken.getBody().getSubject();
+			List<Map<String, String>> scopes = ((Claims)parsedToken.getBody()).get("scope", List.class);
+			scopes.stream().map(scopeMap -> returnValue.add(scopeMap.get("authority"))).collect(Collectors.toList());
+			
 
 		} catch (Exception ex) {
-			returnValue = false;
+			return returnValue;
 		}
 
-		if (subject == null || subject.isEmpty()) {
-			returnValue = false;
-		}
 
 		return returnValue;
 	}
+	
+//	  
+//		private boolean isJwtValid(String jwt) {
+//			boolean returnValue = true;
+//
+//			String subject = null;
+//			String tokenSecret = env.getProperty("token.secret");
+//			byte[] secretKeyBytes = Base64.getEncoder().encode(tokenSecret.getBytes());
+//			SecretKey signingKey = new SecretKeySpec(secretKeyBytes, SignatureAlgorithm.HS512.getJcaName());
+//
+//			JwtParser jwtParser = Jwts.parserBuilder()
+//					.setSigningKey(signingKey)
+//					.build();
+//
+//			try {
+//
+//				Jwt<Header, Claims> parsedToken = jwtParser.parse(jwt);
+//				subject = parsedToken.getBody().getSubject();
+//
+//			} catch (Exception ex) {
+//				returnValue = false;
+//			}
+//
+//			if (subject == null || subject.isEmpty()) {
+//				returnValue = false;
+//			}
+//
+//			return returnValue;
+//		}
 
 }
