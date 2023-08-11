@@ -28,6 +28,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import reactor.core.publisher.Mono;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Component
 public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<AuthorizationHeaderFilter.Config> {
@@ -40,7 +41,21 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 	}
 	
 	public static class Config {
-		// Put configuration properties here
+		private String role;
+
+		private String getRole() {
+			return role;
+		}
+
+		private void setRole(String role) {
+			this.role = role;
+		}
+		
+	}
+	
+	@Override
+	public List<String> shortcutFieldOrder() {
+		return Arrays.asList("role");
 	}
 
 	@Override
