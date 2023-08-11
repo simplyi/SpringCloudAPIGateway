@@ -42,6 +42,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 	
 	public static class Config {
 		private String role;
+		private String authority;
 
 		private String getRole() {
 			return role;
@@ -50,12 +51,20 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 		private void setRole(String role) {
 			this.role = role;
 		}
+
+		private String getAuthority() {
+			return authority;
+		}
+
+		private void setAuthority(String authority) {
+			this.authority = authority;
+		}
 		
 	}
 	
 	@Override
 	public List<String> shortcutFieldOrder() {
-		return Arrays.asList("role");
+		return Arrays.asList("role","authority");
 	}
 
 	@Override
@@ -72,6 +81,9 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			String jwt = authorizationHeader.replace("Bearer", "");
 			
 			List<String> authorities = getAuthorities(jwt);
+			
+			String role = config.getRole();
+			String authority = config.getAuthority();
 			
 //			if(!isJwtValid(jwt)) {
 //				return onError(exchange, "JWT token is not valid", HttpStatus.UNAUTHORIZED);
