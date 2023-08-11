@@ -48,7 +48,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			return role;
 		}
 
-		private void setRole(String role) {
+		public void setRole(String role) {
 			this.role = role;
 		}
 
@@ -56,7 +56,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			return authority;
 		}
 
-		private void setAuthority(String authority) {
+		public void setAuthority(String authority) {
 			this.authority = authority;
 		}
 		
