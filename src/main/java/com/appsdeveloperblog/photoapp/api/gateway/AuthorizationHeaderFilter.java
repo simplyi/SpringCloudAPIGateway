@@ -41,31 +41,45 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 	}
 	
 	public static class Config {
-		private String role;
-		private String authority;
+		private List<String> authorities;
+//		private String role;
+//		private String authority;
 
-		private String getRole() {
-			return role;
+		public List<String> getAuthorities() {
+			return authorities;
 		}
 
-		public void setRole(String role) {
-			this.role = role;
+		public void setAuthorities(String authorities) {
+			this.authorities = Arrays.asList(authorities.split(" "));
 		}
 
-		private String getAuthority() {
-			return authority;
-		}
-
-		public void setAuthority(String authority) {
-			this.authority = authority;
-		}
+//		private String getRole() {
+//			return role;
+//		}
+//
+//		public void setRole(String role) {
+//			this.role = role;
+//		}
+//
+//		private String getAuthority() {
+//			return authority;
+//		}
+//
+//		public void setAuthority(String authority) {
+//			this.authority = authority;
+//		}
 		
 	}
 	
 	@Override
 	public List<String> shortcutFieldOrder() {
-		return Arrays.asList("role","authority");
+		return Arrays.asList("authorities");
 	}
+	
+//	@Override
+//	public List<String> shortcutFieldOrder() {
+//		return Arrays.asList("role","authority");
+//	}
 
 	@Override
 	public GatewayFilter apply(Config config) {
@@ -82,9 +96,12 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			
 			List<String> authorities = getAuthorities(jwt);
 			
-			String role = config.getRole();
-			String authority = config.getAuthority();
-			
+	        boolean hasRequiredAuthority = authorities.stream()
+	        		.anyMatch(authority->config.getAuthorities().contains(authority));
+	        
+	        if(!hasRequiredAuthority) 
+	        	return onError(exchange,"User is not authorized to perform this operation", HttpStatus.FORBIDDEN);
+	        
 //			if(!isJwtValid(jwt)) {
 //				return onError(exchange, "JWT token is not valid", HttpStatus.UNAUTHORIZED);
 //			}
