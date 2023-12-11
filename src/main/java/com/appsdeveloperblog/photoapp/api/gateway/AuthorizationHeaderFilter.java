@@ -1,5 +1,10 @@
 package com.appsdeveloperblog.photoapp.api.gateway;
 
+import java.security.Key;
+import java.util.Base64;
+
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -12,7 +17,10 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.google.common.net.HttpHeaders;
 
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -40,7 +48,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			}
 
 			String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
-			String jwt = authorizationHeader.replace("Bearer", "");
+			String jwt = authorizationHeader.replace("Bearer", "").trim();
 
 			if (!isJwtValid(jwt)) {
 				return onError(exchange, "JWT token is not valid", HttpStatus.UNAUTHORIZED);
@@ -61,13 +69,17 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 		boolean returnValue = true;
 
 		String subject = null;
-
+ 
 		try {
-			subject = Jwts.parser().setSigningKey(env.getProperty("token.secret")).parseClaimsJws(jwt).getBody()
-					.getSubject();
-		} catch (Exception ex) {
-			returnValue = false;
-		}
+            byte[] secretKeyBytes = env.getProperty("token.secret").getBytes();
+            SecretKey key = Keys.hmacShaKeyFor(secretKeyBytes);
+			JwtParser parser = Jwts.parser()
+                    .verifyWith(key)
+                    .build();
+            subject = parser.parseSignedClaims(jwt).getPayload().getSubject();
+        } catch (Exception ex) {
+            returnValue = false;
+        }
 
 		if (subject == null || subject.isEmpty()) {
 			returnValue = false;
