@@ -71,7 +71,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 		String subject = null;
  
 		try {
-            byte[] secretKeyBytes = env.getProperty("token.secret").getBytes();
+            byte[] secretKeyBytes = Base64.getEncoder().encode(env.getProperty("token.secret").getBytes());
             SecretKey key = Keys.hmacShaKeyFor(secretKeyBytes);
 			JwtParser parser = Jwts.parser()
                     .verifyWith(key)
