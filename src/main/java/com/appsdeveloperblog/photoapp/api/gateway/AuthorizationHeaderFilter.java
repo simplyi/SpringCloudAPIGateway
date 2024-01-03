@@ -1,12 +1,13 @@
 package com.appsdeveloperblog.photoapp.api.gateway;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -23,14 +24,11 @@ import org.springframework.web.server.ServerWebExchange;
 import com.google.common.net.HttpHeaders;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import reactor.core.publisher.Mono;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @Component
 public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<AuthorizationHeaderFilter.Config> {
@@ -94,7 +92,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 			}
 			
 			String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
-			String jwt = authorizationHeader.replace("Bearer", "");
+			String jwt = authorizationHeader.replace("Bearer", "").trim();
 			
 			List<String> authorities = getAuthorities(jwt);
 			
@@ -127,16 +125,16 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
 
 		String tokenSecret = env.getProperty("token.secret");
 		byte[] secretKeyBytes = Base64.getEncoder().encode(tokenSecret.getBytes());
-		SecretKey signingKey = new SecretKeySpec(secretKeyBytes, SignatureAlgorithm.HS512.getJcaName());
+		SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyBytes);
 
-		JwtParser jwtParser = Jwts.parserBuilder()
-				.setSigningKey(signingKey)
-				.build();
+		JwtParser parser = Jwts.parser()
+                .verifyWith(secretKey)
+                .build();
 
 		try {
 
-			Jwt<Header, Claims> parsedToken = jwtParser.parse(jwt);
-			List<Map<String, String>> scopes = ((Claims)parsedToken.getBody()).get("scope", List.class);
+			Jws<Claims> parsedToken = parser.parseSignedClaims(jwt);
+			List<Map<String, String>> scopes = ((Claims)parsedToken.getPayload()).get("scope", List.class);
 			scopes.stream().map(scopeMap -> returnValue.add(scopeMap.get("authority"))).collect(Collectors.toList());
 			
 
