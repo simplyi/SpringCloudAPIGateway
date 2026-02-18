@@ -28,7 +28,7 @@ public class MyPreFilter implements GlobalFilter, Ordered {
 
 		HttpHeaders headers = exchange.getRequest().getHeaders();
 		
-		Set<String> headerNames = headers.keySet();
+		Set<String> headerNames = headers.headerNames();
 		
 		headerNames.forEach((headerName)-> {
 			
